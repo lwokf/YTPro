@@ -1237,7 +1237,11 @@ sty(btn);
 btn.id = "ytproCommentsBtn";
 btn.style.width = "96px";
 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT(ytproIsLiveVideo() ? "liveChat" : "comments")}</span>`;
-btn.addEventListener("click", ytproCommentsPanel);
+btn.addEventListener("click", function(ev){
+ev.preventDefault();
+ev.stopPropagation();
+ytproCommentsPanel();
+});
 var toolbar = host.querySelector("div");
 var anchor = toolbar.children.length > 1 ? toolbar.children[1] : null;
 if(anchor){
@@ -1269,6 +1273,8 @@ comments.innerHTML = '<div style="display:flex;align-items:center;justify-conten
 comments.addEventListener("click", function(ev){
 var btn = ev.target.closest("[data-action]");
 if(!btn) return;
+ev.preventDefault();
+ev.stopPropagation();
 if(btn.dataset.action === "closeComments") comments.remove();
 if(btn.dataset.action === "openNativeLiveChat") ytproEmbedLiveChat(comments, vid);
 if(btn.dataset.action === "openNativeComments"){
