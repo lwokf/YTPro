@@ -1109,7 +1109,7 @@ try{ el.dispatchEvent(new MouseEvent("mouseup", opts)); }catch(e){}
 try{ el.dispatchEvent(new MouseEvent("click", opts)); }catch(e){ try{ el.click(); }catch(_){} }
 }
 
-function openYouTubeLiveChat(allowUrlFallback){
+function openYouTubeLiveChat(){
 var selectors = ["ytm-live-chat-entry-point-renderer", "ytm-live-chat-renderer", "ytd-live-chat-frame", "yt-live-chat-app"];
 for(var i = 0; i < selectors.length; i++){
 var el = document.querySelector(selectors[i]);
@@ -1144,13 +1144,51 @@ return true;
 }
 }
 
-if(!allowUrlFallback) return false;
-var vid = getVideoIdFromUrl();
-if(vid){
-Android.oplink("https://www.youtube.com/live_chat?v=" + encodeURIComponent(vid) + "&is_popout=1");
-return true;
-}
 return false;
+}
+
+function ytproLiveChatUrl(vid){
+if(!vid) return "";
+return "https://www.youtube.com/live_chat?v=" + encodeURIComponent(vid) + "&embed_domain=m.youtube.com&is_popout=1";
+}
+
+function ytproOpenInternalUrl(url){
+if(!url) return;
+try{
+var link = document.createElement("a");
+link.href = url;
+link.target = "_self";
+link.rel = "noreferrer";
+link.style.display = "none";
+document.body.appendChild(link);
+link.click();
+link.remove();
+}catch(e){
+window.location.href = url;
+}
+}
+
+function ytproEmbedLiveChat(host, vid){
+var url = ytproLiveChatUrl(vid);
+if(!host || !url) return;
+var existing = document.getElementById("ytproLiveChatInline");
+if(existing){ existing.remove(); }
+
+var wrap = document.createElement("div");
+wrap.id = "ytproLiveChatInline";
+wrap.style.cssText = "margin-top:14px;border-radius:14px;overflow:hidden;background:" + (isD ? "#0f0f0f" : "#fff") + ";border:1px solid " + (isD ? "#333" : "#ddd") + ";";
+wrap.innerHTML = '<div style="height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:' + (isD ? "#202020" : "#f4f4f4") + ';">' +
+    '<b style="font-size:15px;">' + ytproT("liveChat") + '</b>' +
+    '<button data-action="closeInlineLiveChat" style="width:auto;min-width:42px;padding:7px 11px;border-radius:999px;background:' + (isD ? "#353535" : "#e6e6e6") + ';color:' + (isD ? "#fff" : "#111") + ';">X</button>' +
+    '</div>' +
+    '<iframe src="' + url.replaceAll('"', '&quot;') + '" referrerpolicy="origin" allow="autoplay; encrypted-media" style="display:block;width:100%;height:430px;border:0;background:' + (isD ? "#0f0f0f" : "#fff") + ';"></iframe>';
+
+wrap.addEventListener("click", function(ev){
+var btn = ev.target.closest("[data-action]");
+if(btn && btn.dataset.action === "closeInlineLiveChat") wrap.remove();
+});
+host.appendChild(wrap);
+wrap.scrollIntoView({behavior:"smooth", block:"center"});
 }
 
 function openOriginalComments(){
@@ -1229,8 +1267,10 @@ comments.addEventListener("click", function(ev){
 var btn = ev.target.closest("[data-action]");
 if(!btn) return;
 if(btn.dataset.action === "closeComments") comments.remove();
-if(btn.dataset.action === "openNativeLiveChat") Android.oplink("https://www.youtube.com/live_chat?v=" + encodeURIComponent(vid || "") + "&is_popout=1");
-if(btn.dataset.action === "openNativeComments") Android.oplink("https://m.youtube.com/watch?v=" + encodeURIComponent(vid || ""));
+if(btn.dataset.action === "openNativeLiveChat") ytproEmbedLiveChat(comments, vid);
+if(btn.dataset.action === "openNativeComments"){
+if(!openOriginalComments()) ytproOpenInternalUrl("https://m.youtube.com/watch?v=" + encodeURIComponent(vid || "") + "#comments");
+}
 });
 
 var host = document.getElementById("ytproMainDivE") || document.getElementById("player-container-id") || document.querySelector("ytm-watch");
@@ -1251,8 +1291,7 @@ Android.showToast(ytproT("commentsOnlyWatch"));
 return;
 }
 
-var isLiveVideo = ytproIsLiveVideo();
-if(openYouTubeLiveChat(false) || (isLiveVideo && openYouTubeLiveChat(true))){
+if(openYouTubeLiveChat()){
 Android.showToast(ytproT("liveChatOpened"));
 return;
 }
