@@ -1058,11 +1058,25 @@ return new URLSearchParams(window.location.search).get("v");
 }
 
 function openOriginalComments(){
-var selectors = ["ytm-item-section-renderer", "ytd-comments", "ytm-comments-entry-point-header-renderer", "ytm-comment-section-renderer"];
+var selectors = ["ytm-comments-entry-point-header-renderer", "ytm-comment-section-renderer", "ytd-comments-header-renderer", "ytd-comments"];
 for(var i = 0; i < selectors.length; i++){
 var el = document.querySelector(selectors[i]);
 if(el){
-el.scrollIntoView({behavior:"smooth", block:"start"});
+el.scrollIntoView({behavior:"smooth", block:"center"});
+var clickable = el.querySelector("button, a, [role='button']") || el;
+setTimeout(function(target, fallback){
+try{ target.click(); }catch(e){ try{ fallback.click(); }catch(_){} }
+}, 120, clickable, el);
+return true;
+}
+}
+
+var sections = Array.from(document.querySelectorAll("ytm-item-section-renderer"));
+for(var k = 0; k < sections.length; k++){
+var text = sections[k].innerText || "";
+if(text.indexOf(ytproT("comments")) > -1 || text.indexOf("Comments") > -1 || text.indexOf("评论") > -1){
+sections[k].scrollIntoView({behavior:"smooth", block:"center"});
+setTimeout(function(target){ try{ target.click(); }catch(e){} }, 120, sections[k]);
 return true;
 }
 }
