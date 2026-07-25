@@ -62,9 +62,6 @@ var YTProLocales = {
         commentsOnlyWatch: "Comments are available on video pages",
         openYouTubeComments: "Open YouTube comments",
         originalCommentsOpened: "Opened original YouTube comments.",
-        liveChat: "Live chat",
-        openLiveChat: "Open live chat",
-        liveChatUnavailable: "Live chat could not be loaded for this video",
         download: "Download",
         heart: "Heart",
         pipMode: "PIP Mode",
@@ -104,9 +101,6 @@ var YTProLocales = {
         commentsOnlyWatch: "评论区仅在视频页面可用",
         openYouTubeComments: "打开 YouTube 评论",
         originalCommentsOpened: "已打开 YouTube 原生评论区。",
-        liveChat: "直播聊天",
-        openLiveChat: "打开直播聊天",
-        liveChatUnavailable: "当前视频无法加载直播聊天",
         download: "下载",
         heart: "收藏",
         pipMode: "画中画",
@@ -1063,61 +1057,6 @@ return window.location.pathname.replace("/shorts/","");
 return new URLSearchParams(window.location.search).get("v");
 }
 
-function isLiveVideoPage(){
-try{
-if(window.ytInitialPlayerResponse?.videoDetails?.isLive || window.ytInitialPlayerResponse?.videoDetails?.isLiveContent) return true;
-}catch{}
-if(document.querySelector("ytm-live-chat-renderer, ytd-live-chat-frame, ytm-live-chat-header-renderer")) return true;
-return Array.from(document.querySelectorAll("a, iframe")).some(function(el){
-var url = el.href || el.src || "";
-return url.indexOf("live_chat") > -1;
-});
-}
-
-function findLiveChatUrl(){
-var existing = Array.from(document.querySelectorAll("a, iframe")).map(function(el){ return el.href || el.src || ""; }).find(function(url){ return url.indexOf("live_chat") > -1; });
-if(existing) return existing;
-var vid = getVideoIdFromUrl();
-if(!vid) return "";
-return "https://www.youtube.com/live_chat?v=" + encodeURIComponent(vid) + "&is_popout=1";
-}
-
-function openLiveChatPanel(){
-var vid = getVideoIdFromUrl();
-var liveChatUrl = findLiveChatUrl();
-if(!vid || !liveChatUrl){
-Android.showToast(ytproT("liveChatUnavailable"));
-return false;
-}
-
-var existing = document.getElementById("ytproLiveChatDiv");
-if(existing){ existing.remove(); }
-
-var chat = document.createElement("div");
-chat.id = "ytproLiveChatDiv";
-chat.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;";
-
-var inner = document.createElement("div");
-inner.style.cssText = "width:calc(100% - 12px);max-width:900px;height:78%;background:" + (isD ? "#202020" : "#f4f4f4") + ";color:" + (isD ? "#f5f5f5" : "#222") + ";border-radius:18px 18px 0 0;overflow:hidden;box-shadow:0 -2px 12px rgba(0,0,0,.35);";
-inner.innerHTML = '<div style="height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;background:' + (isD ? "#202020" : "#f4f4f4") + ';">' +
-    '<b style="font-size:16px;">' + ytproT("liveChat") + '</b>' +
-    '<button data-action="openLiveChatExternal" style="width:auto;padding:8px 12px;border-radius:999px;background:' + (isD ? "#353535" : "#e6e6e6") + ';color:' + (isD ? "#fff" : "#111") + ';">' + ytproT("openLiveChat") + '</button>' +
-    '<button data-action="closeLiveChat" style="width:auto;padding:8px 12px;border-radius:999px;background:' + (isD ? "#353535" : "#e6e6e6") + ';color:' + (isD ? "#fff" : "#111") + ';">X</button>' +
-    '</div>' +
-    '<iframe src="' + liveChatUrl.replaceAll('"', '&quot;') + '" referrerpolicy="origin" allow="autoplay; encrypted-media" style="display:block;width:100%;height:calc(100% - 44px);border:0;background:' + (isD ? "#0f0f0f" : "#fff") + ';"></iframe>';
-
-chat.addEventListener("click", function(ev){
-if(ev.target === chat){ chat.remove(); }
-var btn = ev.target.closest("[data-action]");
-if(btn && btn.dataset.action === "closeLiveChat"){ chat.remove(); }
-if(btn && btn.dataset.action === "openLiveChatExternal"){ Android.oplink(liveChatUrl); }
-});
-
-chat.appendChild(inner);
-document.body.appendChild(chat);
-return true;
-}
-
 function openOriginalComments(){
 var selectors = ["ytm-item-section-renderer", "ytd-comments", "ytm-comments-entry-point-header-renderer", "ytm-comment-section-renderer"];
 for(var i = 0; i < selectors.length; i++){
@@ -1148,7 +1087,7 @@ var btn = document.createElement("div");
 sty(btn);
 btn.id = "ytproCommentsBtn";
 btn.style.width = "110px";
-btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT(isLiveVideoPage() ? "liveChat" : "comments")}</span>`;
+btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT("comments")}</span>`;
 btn.addEventListener("click", ytproCommentsPanel);
 host.querySelector("div").appendChild(btn);
 }
@@ -1159,10 +1098,6 @@ if(existing){ existing.remove(); }
 
 if(!/youtube\.com\/(watch|shorts)/.test(window.location.href)){
 Android.showToast(ytproT("commentsOnlyWatch"));
-return;
-}
-
-if(isLiveVideoPage() && openLiveChatPanel()){
 return;
 }
 
@@ -2557,7 +2492,6 @@ try{document.getElementById("outerdownytprodiv").remove();}catch{}
 try{document.getElementById("outerheartsdiv").remove();}catch{}
 try{document.getElementById("settingsprodiv").remove();}catch{}
 try{document.getElementById("ytproCommentsDiv").remove();}catch{}
-try{document.getElementById("ytproLiveChatDiv").remove();}catch{}
 //try{document.querySelector("#ytproDownloadIndicator").remove();}catch{}
 //try{document.querySelector("#ytProDownloaderDiv").remove();}catch{}
 if(window.location.hash == "#download"){
