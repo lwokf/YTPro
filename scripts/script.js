@@ -62,6 +62,8 @@ var YTProLocales = {
         commentsOnlyWatch: "Comments are available on video pages",
         openYouTubeComments: "Open YouTube comments",
         originalCommentsOpened: "Opened original YouTube comments.",
+        liveChat: "Live chat",
+        liveChatOpened: "Opened YouTube live chat.",
         download: "Download",
         heart: "Heart",
         pipMode: "PIP Mode",
@@ -101,6 +103,8 @@ var YTProLocales = {
         commentsOnlyWatch: "评论区仅在视频页面可用",
         openYouTubeComments: "打开 YouTube 评论",
         originalCommentsOpened: "已打开 YouTube 原生评论区。",
+        liveChat: "直播聊天",
+        liveChatOpened: "已打开 YouTube 直播聊天。",
         download: "下载",
         heart: "收藏",
         pipMode: "画中画",
@@ -1057,6 +1061,28 @@ return window.location.pathname.replace("/shorts/","");
 return new URLSearchParams(window.location.search).get("v");
 }
 
+function ytproPlayerResponse(){
+try{ if(window.ytInitialPlayerResponse) return window.ytInitialPlayerResponse; }catch(e){}
+try{ if(ytplayer?.config?.args?.raw_player_response) return ytplayer.config.args.raw_player_response; }catch(e){}
+try{ if(window.ytplayer?.config?.args?.raw_player_response) return window.ytplayer.config.args.raw_player_response; }catch(e){}
+return null;
+}
+
+function ytproIsLiveVideo(){
+var response = ytproPlayerResponse();
+try{
+var details = response?.videoDetails || {};
+var microformat = response?.microformat?.playerMicroformatRenderer || {};
+if(details.isLive || details.isLiveContent || microformat.liveBroadcastDetails || microformat.isLiveBroadcast) return true;
+}catch(e){}
+
+var selectors = ["ytm-live-chat-entry-point-renderer", "ytm-live-chat-renderer", "ytd-live-chat-frame", "yt-live-chat-app"];
+for(var i = 0; i < selectors.length; i++){
+if(document.querySelector(selectors[i])) return true;
+}
+return false;
+}
+
 function ytproTapElement(el){
 if(!el) return;
 var rect = el.getBoundingClientRect();
@@ -1068,6 +1094,42 @@ try{ el.dispatchEvent(new MouseEvent("mousedown", opts)); }catch(e){}
 try{ el.dispatchEvent(new PointerEvent("pointerup", opts)); }catch(e){}
 try{ el.dispatchEvent(new MouseEvent("mouseup", opts)); }catch(e){}
 try{ el.dispatchEvent(new MouseEvent("click", opts)); }catch(e){ try{ el.click(); }catch(_){} }
+}
+
+function openYouTubeLiveChat(){
+var selectors = ["ytm-live-chat-entry-point-renderer", "ytm-live-chat-renderer", "ytd-live-chat-frame", "yt-live-chat-app"];
+for(var i = 0; i < selectors.length; i++){
+var el = document.querySelector(selectors[i]);
+if(el){
+el.scrollIntoView({behavior:"smooth", block:"center"});
+var clickable = el.querySelector("button, a, [role='button']") || el;
+setTimeout(function(target, fallback){
+ytproTapElement(target);
+if(target !== fallback) ytproTapElement(fallback);
+}, 120, clickable, el);
+return true;
+}
+}
+
+var liveLabels = ["Live chat", "Chat", "实时聊天", "直播聊天", "聊天室"];
+var candidates = Array.from(document.querySelectorAll("button, a, [role='button'], ytm-button-renderer, ytm-toggle-button-renderer"));
+for(var k = 0; k < candidates.length; k++){
+var label = ((candidates[k].innerText || "") + " " + (candidates[k].getAttribute("aria-label") || "") + " " + (candidates[k].title || "")).trim();
+for(var j = 0; j < liveLabels.length; j++){
+if(label.indexOf(liveLabels[j]) > -1){
+candidates[k].scrollIntoView({behavior:"smooth", block:"center"});
+setTimeout(function(target){ ytproTapElement(target); }, 120, candidates[k]);
+return true;
+}
+}
+}
+
+var vid = getVideoIdFromUrl();
+if(vid){
+Android.oplink("https://www.youtube.com/live_chat?v=" + encodeURIComponent(vid) + "&is_popout=1");
+return true;
+}
+return false;
 }
 
 function openOriginalComments(){
@@ -1115,7 +1177,7 @@ var btn = document.createElement("div");
 sty(btn);
 btn.id = "ytproCommentsBtn";
 btn.style.width = "96px";
-btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT("comments")}</span>`;
+btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT(ytproIsLiveVideo() ? "liveChat" : "comments")}</span>`;
 btn.addEventListener("click", ytproCommentsPanel);
 var toolbar = host.querySelector("div");
 var anchor = toolbar.children.length > 1 ? toolbar.children[1] : null;
@@ -1132,6 +1194,11 @@ if(existing){ existing.remove(); }
 
 if(!/youtube\.com\/(watch|shorts)/.test(window.location.href)){
 Android.showToast(ytproT("commentsOnlyWatch"));
+return;
+}
+
+if(ytproIsLiveVideo() && openYouTubeLiveChat()){
+Android.showToast(ytproT("liveChatOpened"));
 return;
 }
 
