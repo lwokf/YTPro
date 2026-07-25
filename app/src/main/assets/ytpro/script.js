@@ -1067,7 +1067,15 @@ function isLiveVideoPage(){
 try{
 if(window.ytInitialPlayerResponse?.videoDetails?.isLive || window.ytInitialPlayerResponse?.videoDetails?.isLiveContent) return true;
 }catch{}
-if(document.querySelector("ytm-live-chat-renderer, ytd-live-chat-frame, ytm-live-chat-header-renderer")) return true;
+if(document.querySelector('meta[itemprop="isLiveBroadcast"][content="True"], meta[itemprop="isLiveBroadcast"][content="true"], ytm-live-chat-renderer, ytd-live-chat-frame, ytm-live-chat-header-renderer')) return true;
+try{
+var pageData = Array.from(document.scripts).map(function(script){ return script.textContent || ""; }).join("\n");
+if(pageData.indexOf('"isLiveContent":true') > -1 || pageData.indexOf('"isLive":true') > -1 || pageData.indexOf('liveChatRenderer') > -1 || pageData.indexOf('liveChatEndpoint') > -1) return true;
+}catch{}
+try{
+var watchText = (document.querySelector("ytm-watch") || document.body).innerText || "";
+if(/\bLIVE\b|Live chat|Top chat|直播聊天|实时聊天|正在直播|直播中/.test(watchText)) return true;
+}catch{}
 return Array.from(document.querySelectorAll("a, iframe")).some(function(el){
 var url = el.href || el.src || "";
 return url.indexOf("live_chat") > -1;
@@ -1119,7 +1127,7 @@ return true;
 }
 
 function openOriginalComments(){
-var selectors = ["ytm-item-section-renderer", "ytd-comments", "ytm-comments-entry-point-header-renderer", "ytm-comment-section-renderer"];
+var selectors = ["ytd-comments", "ytm-comments-entry-point-header-renderer", "ytm-comment-section-renderer", "ytm-comment-section-renderer ytm-item-section-renderer"];
 for(var i = 0; i < selectors.length; i++){
 var el = document.querySelector(selectors[i]);
 if(el){
@@ -1141,14 +1149,20 @@ return false;
 
 function ensureCommentButton(){
 if(window.location.href.indexOf("youtube.com/watch") < 0 && window.location.href.indexOf("youtube.com/shorts") < 0) return;
-if(document.getElementById("ytproCommentsBtn") != null) return;
+var existing = document.getElementById("ytproCommentsBtn");
+var label = ytproT(isLiveVideoPage() ? "liveChat" : "comments");
+if(existing != null){
+var span = existing.querySelector("span");
+if(span) span.textContent = label;
+return;
+}
 var host = document.getElementById('ytproMainDivE');
 if(!host || !host.querySelector("div")) return;
 var btn = document.createElement("div");
 sty(btn);
 btn.id = "ytproCommentsBtn";
 btn.style.width = "110px";
-btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT(isLiveVideoPage() ? "liveChat" : "comments")}</span>`;
+btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${label}</span>`;
 btn.addEventListener("click", ytproCommentsPanel);
 host.querySelector("div").appendChild(btn);
 }
