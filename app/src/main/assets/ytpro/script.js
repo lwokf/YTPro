@@ -1236,12 +1236,27 @@ var btn = document.createElement("div");
 sty(btn);
 btn.id = "ytproCommentsBtn";
 btn.style.width = "96px";
+btn.style.position = "relative";
+btn.style.zIndex = "2147483647";
+btn.style.touchAction = "manipulation";
 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT(ytproIsLiveVideo() ? "liveChat" : "comments")}</span>`;
-btn.addEventListener("click", function(ev){
+var ytproLastCommentsTouch = 0;
+function ytproActivateCommentsButton(ev){
+var now = Date.now();
+if(ev.type === "click" && now - ytproLastCommentsTouch < 700){
 ev.preventDefault();
 ev.stopPropagation();
+if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+return;
+}
+if(ev.type !== "click") ytproLastCommentsTouch = now;
+ev.preventDefault();
+ev.stopPropagation();
+if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
 ytproCommentsPanel();
-});
+}
+btn.addEventListener("touchend", ytproActivateCommentsButton, {capture:true, passive:false});
+btn.addEventListener("click", ytproActivateCommentsButton, true);
 var toolbar = host.querySelector("div");
 var anchor = toolbar.children.length > 1 ? toolbar.children[1] : null;
 if(anchor){
@@ -1275,6 +1290,7 @@ var btn = ev.target.closest("[data-action]");
 if(!btn) return;
 ev.preventDefault();
 ev.stopPropagation();
+if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
 if(btn.dataset.action === "closeComments") comments.remove();
 if(btn.dataset.action === "openNativeLiveChat") ytproEmbedLiveChat(comments, vid);
 if(btn.dataset.action === "openNativeComments"){
