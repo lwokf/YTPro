@@ -1247,22 +1247,23 @@ toolbar.appendChild(btn);
 }
 }
 
-function ytproShowInlineCommentsFallback(vid){
+function ytproShowInlineCommentsFallback(vid, autoLive){
 var existing = document.getElementById("ytproCommentsDiv");
 if(existing){ existing.remove(); }
 
+var isLiveFallback = !!autoLive;
 var comments = document.createElement("div");
 comments.id = "ytproCommentsDiv";
 comments.style.cssText = "width:100%;max-width:none;margin:8px 0 14px 0;padding:16px 0;border-radius:0;background:" + (isD ? "#202020" : "#f4f4f4") + ";color:" + (isD ? "#f5f5f5" : "#222") + ";box-sizing:border-box;font-size:14px;line-height:1.45;";
 comments.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:0 16px;">' +
-    '<b style="font-size:18px;">' + ytproT("comments") + '</b>' +
+    '<b style="font-size:18px;">' + ytproT(isLiveFallback ? "liveChat" : "comments") + '</b>' +
     '<button data-action="closeComments" style="width:auto;min-width:42px;padding:8px 12px;border-radius:999px;background:' + (isD ? "#353535" : "#e6e6e6") + ';color:' + (isD ? "#fff" : "#111") + ';">X</button>' +
     '</div>' +
-    '<div style="padding:0 16px;">' + ytproT("commentsUnavailable") + '</div>' +
-    '<div style="padding:0 16px;margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;">' +
+    (isLiveFallback ? '' : '<div style="padding:0 16px;">' + ytproT("commentsUnavailable") + '</div>') +
+    (isLiveFallback ? '' : '<div style="padding:0 16px;margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;">' +
     (vid ? '<button data-action="openNativeLiveChat" style="width:auto;min-width:160px;padding:10px 14px;border-radius:999px;background:' + d + ';color:' + c + ';">' + ytproT("liveChat") + '</button>' : '') +
     '<button data-action="openNativeComments" style="width:auto;min-width:180px;padding:10px 14px;border-radius:999px;background:' + d + ';color:' + c + ';">' + ytproT("openYouTubeComments") + '</button>' +
-    '</div>' +
+    '</div>') +
     '<div style="padding:0 16px;margin-top:10px;font-size:12px;opacity:.72;">' + (vid ? vid : "") + '</div>';
 
 comments.addEventListener("click", function(ev){
@@ -1281,6 +1282,9 @@ host.parentNode.insertBefore(comments, host.nextSibling);
 }else{
 document.body.appendChild(comments);
 }
+if(isLiveFallback && vid){
+setTimeout(function(){ ytproEmbedLiveChat(comments, vid); }, 120);
+}
 comments.scrollIntoView({behavior:"smooth", block:"center"});
 }
 
@@ -1298,12 +1302,17 @@ Android.showToast(ytproT("liveChatOpened"));
 return;
 }
 
+var vid = getVideoIdFromUrl();
+if(ytproIsLiveVideo()){
+ytproShowInlineCommentsFallback(vid, true);
+return;
+}
+
 if(openOriginalComments()){
 Android.showToast(ytproT("originalCommentsOpened"));
 return;
 }
 
-var vid = getVideoIdFromUrl();
 ytproShowInlineCommentsFallback(vid);
 }
 
