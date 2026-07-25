@@ -34,10 +34,6 @@ public class YTProWebViewClient extends WebViewClient {
 	public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
 		String url = request.getUrl().toString();
 
-		if (url.contains("youtube.com/ytpro_local/")) {
-			return getLocalYtProAsset(url);
-		}
-
 		if (url.contains("accounts.google.com") ||
     url.contains("myaccount.google.com") ||
     url.contains("accounts.youtube.com") || 
@@ -185,32 +181,13 @@ public class YTProWebViewClient extends WebViewClient {
 		
 		return super.shouldInterceptRequest(view, request);
 	}
-
-	private WebResourceResponse getLocalYtProAsset(String url) {
-		try {
-			String fileName = url.substring(url.lastIndexOf('/') + 1);
-			String mimeType = fileName.endsWith(".js") ? "application/javascript" : "text/plain";
-			InputStream stream = activity.getAssets().open("ytpro/" + fileName);
-
-			Map<String, String> headers = new HashMap<>();
-			headers.put("Access-Control-Allow-Origin", "*");
-			headers.put("Access-Control-Allow-Methods", "GET, OPTIONS");
-			headers.put("Access-Control-Allow-Headers", "*");
-			headers.put("Cache-Control", "no-cache, no-store, must-revalidate");
-
-			return new WebResourceResponse(mimeType, "utf-8", 200, "OK", headers, stream);
-		} catch (Exception e) {
-			Log.e("YTPRO_WVC", "Local asset fetch failed: " + e.getMessage());
-			return null;
-		}
-	}
 	
 	@Override
 	public void onPageFinished(WebView view, String url) {
 		web.evaluateJavascript("if (window.trustedTypes && window.trustedTypes.createPolicy && !window.trustedTypes.defaultPolicy) {window.trustedTypes.createPolicy('default', {createHTML: (string) => string,createScriptURL: string => string, createScript: string => string, });}", null);
-		web.evaluateJavascript("(function () { var script = document.createElement('script'); script.src='https://youtube.com/ytpro_local/script.js'; document.body.appendChild(script);  })();", null);
-		web.evaluateJavascript("(function () { var script = document.createElement('script'); script.src='https://youtube.com/ytpro_local/bgplay.js'; document.body.appendChild(script);  })();", null);
-		web.evaluateJavascript("(function () { var script = document.createElement('script');script.type='module';script.src='https://youtube.com/ytpro_local/innertube.js'; document.body.appendChild(script);  })();", null);
+		web.evaluateJavascript("(function () { var script = document.createElement('script'); script.src='https://youtube.com/ytpro_cdn/npm/ytpro@latest'; document.body.appendChild(script);  })();", null);
+		web.evaluateJavascript("(function () { var script = document.createElement('script'); script.src='https://youtube.com/ytpro_cdn/npm/ytpro@latest/bgplay.js'; document.body.appendChild(script);  })();", null);
+		web.evaluateJavascript("(function () { var script = document.createElement('script');script.type='module';script.src='https://youtube.com/ytpro_cdn/npm/ytpro@latest/innertube.js'; document.body.appendChild(script);  })();", null);
 		
 		
 		

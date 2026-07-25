@@ -1,9 +1,8 @@
 name: Gradle
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ main, codex-zh-comments ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
