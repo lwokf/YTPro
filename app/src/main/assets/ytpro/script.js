@@ -1086,10 +1086,16 @@ if(!host || !host.querySelector("div")) return;
 var btn = document.createElement("div");
 sty(btn);
 btn.id = "ytproCommentsBtn";
-btn.style.width = "110px";
+btn.style.width = "96px";
 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H7l-3 3V5z" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"/></svg><span style="margin-left:6px">${ytproT("comments")}</span>`;
 btn.addEventListener("click", ytproCommentsPanel);
-host.querySelector("div").appendChild(btn);
+var toolbar = host.querySelector("div");
+var anchor = toolbar.children.length > 1 ? toolbar.children[1] : null;
+if(anchor){
+toolbar.insertBefore(btn, anchor);
+}else{
+toolbar.appendChild(btn);
+}
 }
 
 function ytproCommentsPanel(){
@@ -1928,7 +1934,7 @@ insertAfter(document.getElementsByClassName('slim-video-action-bar-actions')[0],
 var ytproMainDiv=document.createElement("div");
 ytproMainDiv.setAttribute("style",`
 height:50px;width:100%;display:flex;overflow:auto;
-align-items:center;justify-content:center;padding-left:20px;padding-right:10px;
+align-items:center;justify-content:flex-start;padding-left:20px;padding-right:10px;
 `);
 ytproMainDivA.appendChild(ytproMainDiv);
 
