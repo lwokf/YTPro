@@ -1068,12 +1068,12 @@ try{ if(window.ytplayer?.config?.args?.raw_player_response) return window.ytplay
 return null;
 }
 
-function ytproIsLiveVideo(){
+function ytproIsLiveVideo(expectedVideoId){
 var response = ytproPlayerResponse();
 try{
 var details = response?.videoDetails || {};
 var microformat = response?.microformat?.playerMicroformatRenderer || {};
-if(details.isLive || details.isLiveContent || microformat.liveBroadcastDetails || microformat.isLiveBroadcast) return true;
+if((!expectedVideoId || details.videoId === expectedVideoId) && (details.isLive || details.isLiveContent || microformat.liveBroadcastDetails || microformat.isLiveBroadcast)) return true;
 }catch(e){}
 
 var selectors = ["ytm-live-chat-entry-point-renderer", "ytm-live-chat-renderer", "ytd-live-chat-frame", "yt-live-chat-app"];
@@ -1085,6 +1085,7 @@ try{
 var scripts = document.querySelectorAll("script");
 for(var j = 0; j < scripts.length; j++){
 var scriptText = scripts[j].textContent || "";
+if(expectedVideoId && scriptText.indexOf(expectedVideoId) < 0) continue;
 if(scriptText.indexOf('"isLiveContent":true') > -1 || scriptText.indexOf('"isLive":true') > -1 || scriptText.indexOf('liveChatRenderer') > -1 || scriptText.indexOf('liveChatEndpoint') > -1 || scriptText.indexOf('liveBroadcastDetails') > -1) return true;
 }
 }catch(e){}
@@ -1305,6 +1306,46 @@ return;
 
 var vid = getVideoIdFromUrl();
 ytproShowInlineCommentsFallback(vid);
+}
+
+var ytproAutoLiveChatTimer = null;
+var ytproAutoLiveChatVideoId = "";
+var ytproAutoLiveChatOpenedVideoId = "";
+
+function ytproScheduleLiveChat(){
+if(ytproAutoLiveChatTimer != null) return;
+ytproAutoLiveChatTimer = setTimeout(function(){
+ytproAutoLiveChatTimer = null;
+
+if(window.location.href.indexOf("youtube.com/watch") < 0){
+ytproAutoLiveChatVideoId = "";
+ytproAutoLiveChatOpenedVideoId = "";
+return;
+}
+
+var vid = getVideoIdFromUrl();
+if(!vid){
+ytproAutoLiveChatVideoId = "";
+return;
+}
+
+if(ytproAutoLiveChatVideoId !== vid){
+ytproAutoLiveChatVideoId = vid;
+ytproAutoLiveChatOpenedVideoId = "";
+try{ document.getElementById("ytproCommentsDiv")?.remove(); }catch(e){}
+}
+
+if(ytproAutoLiveChatOpenedVideoId === vid || !ytproIsLiveVideo(vid) || document.getElementById("ytproLiveChatInline")) return;
+
+var host = document.getElementById("ytproMainDivE") || document.getElementById("player-container-id") || document.querySelector("ytm-watch");
+if(!host){
+ytproAutoLiveChatVideoId = "";
+return;
+}
+
+ytproAutoLiveChatOpenedVideoId = vid;
+ytproShowInlineCommentsFallback(vid, true);
+}, 400);
 }
 
 function checkUpdates(){
@@ -2981,6 +3022,7 @@ addMaxButton();
 //settingsTab
 addSettingsTab();
 ensureCommentButton();
+ytproScheduleLiveChat();
 
 
 try{
@@ -2998,6 +3040,7 @@ catch{}
 
 // Start observing changes in the body
 observer.observe(targetNode, config);
+ytproScheduleLiveChat();
 
 
 
