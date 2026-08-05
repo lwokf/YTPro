@@ -2,10 +2,7 @@ package com.google.android.youtube.pro.webview;
 
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.AttributeSet;
-import android.view.View;
-import android.util.Log;
 import android.webkit.WebView;
 
 public class YTProWebView extends WebView {
@@ -22,17 +19,4 @@ public class YTProWebView extends WebView {
 		super(context, attrs, defStyleAttr);
 	}
 	
-	@Override
-	protected void onWindowVisibilityChanged(int visibility) {
-		
-		
-		SharedPreferences prefs = getContext().getSharedPreferences("YTPRO", Context.MODE_PRIVATE);
-		boolean bgPlay = prefs.getBoolean("bgplay", false); 
-		
-		
-		
-		if (visibility != View.GONE && visibility != View.INVISIBLE || !bgPlay){
-			super.onWindowVisibilityChanged(visibility);
-		}
-	}
 }

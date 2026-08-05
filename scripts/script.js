@@ -2602,29 +2602,32 @@ document.getElementsByClassName('video-stream')[0].play();
 
 
 
-function PIPlayer(pip = false){
-  
+async function preparePIP(requestVideoFullscreen = true){
 var v=document.getElementsByClassName('video-stream')[0];
+if(!v) return "";
 
- 
-if(pip){
-
-if(v.getBoundingClientRect().height > v.getBoundingClientRect().width){
-Android.pipvid("portrait");
-}
-else{
-Android.pipvid("landscape");
-}
-
-return;
-}
-
-
-v.requestFullscreen();
-v.play();
 pauseAllowed = false;
 isPIP=true;
+try{ await v.play(); }catch(e){}
 
+var mode=v.getBoundingClientRect().height > v.getBoundingClientRect().width ? "portrait" : "landscape";
+
+if(requestVideoFullscreen && document.fullscreenElement !== v){
+try{ await v.requestFullscreen(); }catch(e){}
+}
+
+await new Promise(function(resolve){ requestAnimationFrame(resolve); });
+return mode;
+}
+
+async function PIPlayer(pip = false){
+var mode=await preparePIP();
+if(!mode) return;
+
+if(pip){
+Android.pipvid(mode);
+return;
+}
 }
 
 

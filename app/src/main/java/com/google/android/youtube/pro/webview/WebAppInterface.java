@@ -1,6 +1,5 @@
 package com.google.android.youtube.pro.webview;
 
-import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -8,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.provider.Settings;
-import android.util.Rational;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
@@ -243,12 +241,7 @@ public class WebAppInterface {
 	@JavascriptInterface
 	public void pipvid(String mode) {
 		if (android.os.Build.VERSION.SDK_INT >= 26) {
-			try {
-				PictureInPictureParams params = new PictureInPictureParams.Builder()
-				.setAspectRatio(new Rational(mode.equals("portrait") ? 9 : 16, mode.equals("portrait") ? 16 : 9))
-				.build();
-				activity.enterPictureInPictureMode(params);
-			} catch (Exception e) { e.printStackTrace(); }
+			activity.runOnUiThread(() -> activity.enterPipMode(mode));
 		} else {
 			Toast.makeText(activity, activity.getString(R.string.no_pip), Toast.LENGTH_SHORT).show();
 		}

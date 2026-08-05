@@ -166,25 +166,31 @@ public class MainActivity extends Activity {
 
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
-        web.evaluateJavascript(isInPictureInPictureMode ? "PIPlayer();" : "removePIP();", null);
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
+        web.evaluateJavascript(isInPictureInPictureMode ? "pauseAllowed=false;isPIP=true;" : "removePIP();", null);
         isPip = isInPictureInPictureMode;
+    }
+
+    public void enterPipMode(String mode) {
+        if (Build.VERSION.SDK_INT < 26 || isPip || isInPictureInPictureMode()) return;
+        try {
+            isPip = true;
+            PictureInPictureParams params = new PictureInPictureParams.Builder()
+                    .setAspectRatio(new Rational("portrait".equals(mode) ? 9 : 16, "portrait".equals(mode) ? 16 : 9))
+                    .build();
+            isPip = enterPictureInPictureMode(params);
+        } catch (RuntimeException e) {
+            isPip = false;
+            e.printStackTrace();
+        }
     }
 
     @Override
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
-        if (Build.VERSION.SDK_INT >= 26 && web.getUrl() != null && web.getUrl().contains("watch")) {
-            if (isPlaying) {
-                try {
-                    isPip = true;
-                    PictureInPictureParams params = new PictureInPictureParams.Builder()
-                            .setAspectRatio(new Rational(portrait ? 9 : 16, portrait ? 16 : 9))
-                            .build();
-                    enterPictureInPictureMode(params);
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (Build.VERSION.SDK_INT >= 26 && !isPip && web.getUrl() != null && web.getUrl().contains("watch") && isPlaying) {
+            web.evaluateJavascript("preparePIP(false);", null);
+            enterPipMode(portrait ? "portrait" : "landscape");
         }
     }
 
