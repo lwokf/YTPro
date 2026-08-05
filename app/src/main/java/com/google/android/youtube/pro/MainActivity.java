@@ -189,8 +189,7 @@ public class MainActivity extends Activity {
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
         if (Build.VERSION.SDK_INT >= 26 && !isPip && web.getUrl() != null && web.getUrl().contains("watch") && isPlaying) {
-            web.evaluateJavascript("preparePIP(false);", null);
-            enterPipMode(portrait ? "portrait" : "landscape");
+            web.evaluateJavascript("enterPIPFromSystem();", null);
         }
     }
 

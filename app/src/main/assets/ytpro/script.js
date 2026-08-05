@@ -2589,11 +2589,14 @@ function removePIP(){
 
 isPIP=false;
 pauseAllowed = true;
-document.exitFullscreen();
+document.documentElement.classList.remove("ytpro-pip-active");
+if(document.fullscreenElement) document.exitFullscreen();
  
-document.getElementsByClassName('video-stream')[0].pause();
+var v=document.getElementsByClassName('video-stream')[0];
+if(!v) return;
+v.pause();
 setTimeout(()=>{
-document.getElementsByClassName('video-stream')[0].play();
+v.play();
 },5);
 
 
@@ -2602,15 +2605,23 @@ document.getElementsByClassName('video-stream')[0].play();
 
 
 
-async function preparePIP(requestVideoFullscreen = true){
+function preparePIPLayout(){
 var v=document.getElementsByClassName('video-stream')[0];
 if(!v) return "";
 
 pauseAllowed = false;
 isPIP=true;
-try{ await v.play(); }catch(e){}
+document.documentElement.classList.add("ytpro-pip-active");
+v.play().catch(()=>{});
+v.getBoundingClientRect();
 
-var mode=v.getBoundingClientRect().height > v.getBoundingClientRect().width ? "portrait" : "landscape";
+return v.videoHeight > v.videoWidth ? "portrait" : "landscape";
+}
+
+async function preparePIP(requestVideoFullscreen = true){
+var mode=preparePIPLayout();
+if(!mode) return "";
+var v=document.getElementsByClassName('video-stream')[0];
 
 if(requestVideoFullscreen && document.fullscreenElement !== v){
 try{ await v.requestFullscreen(); }catch(e){}
@@ -2618,6 +2629,11 @@ try{ await v.requestFullscreen(); }catch(e){}
 
 await new Promise(function(resolve){ requestAnimationFrame(resolve); });
 return mode;
+}
+
+function enterPIPFromSystem(){
+var mode=preparePIPLayout();
+if(mode) Android.pipvid(mode);
 }
 
 async function PIPlayer(pip = false){
@@ -2629,6 +2645,48 @@ Android.pipvid(mode);
 return;
 }
 }
+
+var ytproPIPStyle=document.createElement("style");
+ytproPIPStyle.textContent=`
+html.ytpro-pip-active,
+html.ytpro-pip-active body {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  background: #000 !important;
+}
+html.ytpro-pip-active #player-container-id,
+html.ytpro-pip-active #player,
+html.ytpro-pip-active .html5-video-player,
+html.ytpro-pip-active .html5-video-container {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  transform: none !important;
+  background: #000 !important;
+  z-index: 2147483646 !important;
+}
+html.ytpro-pip-active #player-container-id *,
+html.ytpro-pip-active #player * {
+  visibility: hidden !important;
+}
+html.ytpro-pip-active video.video-stream {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  transform: none !important;
+  background: #000 !important;
+  visibility: visible !important;
+  z-index: 2147483647 !important;
+}`;
+document.head.appendChild(ytproPIPStyle);
 
 
 
