@@ -2631,11 +2631,6 @@ await new Promise(function(resolve){ requestAnimationFrame(resolve); });
 return mode;
 }
 
-function enterPIPFromSystem(){
-var mode=preparePIPLayout();
-if(mode) Android.pipvid(mode);
-}
-
 async function PIPlayer(pip = false){
 var mode=await preparePIP();
 if(!mode) return;

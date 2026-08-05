@@ -167,7 +167,7 @@ public class MainActivity extends Activity {
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig);
-        web.evaluateJavascript(isInPictureInPictureMode ? "pauseAllowed=false;isPIP=true;" : "removePIP();", null);
+        web.evaluateJavascript(isInPictureInPictureMode ? "preparePIPLayout();" : "removePIP();", null);
         isPip = isInPictureInPictureMode;
     }
 
@@ -189,7 +189,8 @@ public class MainActivity extends Activity {
     protected void onUserLeaveHint() {
         super.onUserLeaveHint();
         if (Build.VERSION.SDK_INT >= 26 && !isPip && web.getUrl() != null && web.getUrl().contains("watch") && isPlaying) {
-            web.evaluateJavascript("enterPIPFromSystem();", null);
+            web.evaluateJavascript("preparePIPLayout();", null);
+            enterPipMode(portrait ? "portrait" : "landscape");
         }
     }
 
