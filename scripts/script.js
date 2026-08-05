@@ -2666,10 +2666,6 @@ html.ytpro-pip-active .html5-video-container {
   background: #000 !important;
   z-index: 2147483646 !important;
 }
-html.ytpro-pip-active #player-container-id *,
-html.ytpro-pip-active #player * {
-  visibility: hidden !important;
-}
 html.ytpro-pip-active video.video-stream {
   position: absolute !important;
   inset: 0 !important;
